@@ -74,22 +74,34 @@ export function useEmergency(userId, user, emergencyContacts = []) {
     emergencyStateRef.current = EMERGENCY_STATE.DISPATCHED;
     setEmergencyState(EMERGENCY_STATE.DISPATCHED);
 
-    const uid = userIdRef.current;
-    const u   = userRef.current;
+    const uid      = userIdRef.current;
+    const u        = userRef.current;
     const contacts = emergencyContactsRef.current;
 
     if (incidentRef.current && uid) {
       await updateIncidentStatus(uid, incidentRef.current, 'ALERT_DISPATCHED');
     }
 
+    // Build SMS body once (shared for all contacts)
     const body = buildSMSBody({
-      name:     u?.displayName ?? 'Rider',
-      severity: sev?.level || 'SEVERE',
-      gps:      impact?.gps ?? null,
+      name:       u?.displayName ?? 'Rider',
+      severity:   sev?.level || 'SEVERE',
+      gps:        impact?.gps ?? null,
+      bloodGroup: u?.bloodGroup ?? null,
     });
 
+    // Send SMS to ALL emergency contacts sequentially with 1s gap
     if (contacts.length > 0) {
-      dispatchSMSAlert(contacts[0].phone, body);
+      contacts.forEach((contact, idx) => {
+        setTimeout(() => {
+          if (contact.phone) {
+            dispatchSMSAlert(contact.phone, body);
+            console.info(`[Emergency] SMS dispatched to contact ${idx + 1}: ${contact.name}`);
+          }
+        }, idx * 1200); // 1.2s gap between each SMS to avoid OS throttle
+      });
+    } else {
+      console.warn('[Emergency] No emergency contacts configured — SMS not sent.');
     }
   }
 
