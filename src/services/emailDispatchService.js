@@ -14,9 +14,9 @@ import emailjs from '@emailjs/browser';
 
 // ── YOUR EMAILJS CONFIG ─────────────────────────────────────────────────────
 // Replace these with your real EmailJS credentials
-const EMAILJS_SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID  || 'YOUR_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'YOUR_TEMPLATE_ID';
-const EMAILJS_PUBLIC_KEY  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY  || 'YOUR_PUBLIC_KEY';
+const EMAILJS_SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID  || 'service_lzj0gl7';
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_gs6oce7';
+const EMAILJS_PUBLIC_KEY  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY  || 'EleYy0xV_iNVk_mc5';
 
 let _initialized = false;
 
@@ -70,13 +70,8 @@ async function sendEmergencyEmailToContact(contact, rider, incident) {
  */
 export async function dispatchEmergencyEmails(contacts, rider, incident) {
   // Check if EmailJS is configured
-  if (
-    !EMAILJS_SERVICE_ID  || EMAILJS_SERVICE_ID.startsWith('YOUR_') ||
-    !EMAILJS_TEMPLATE_ID || EMAILJS_TEMPLATE_ID.startsWith('YOUR_') ||
-    !EMAILJS_PUBLIC_KEY  || EMAILJS_PUBLIC_KEY.startsWith('YOUR_')
-  ) {
-    console.warn('[EmailJS] EmailJS is not configured yet. Add your credentials to .env file.');
-    console.warn('[EmailJS] See src/services/emailDispatchService.js for setup instructions.');
+  if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
+    console.warn('[EmailJS] EmailJS credentials missing.');
     return;
   }
 
