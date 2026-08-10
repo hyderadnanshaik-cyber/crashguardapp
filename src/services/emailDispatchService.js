@@ -128,10 +128,11 @@ export async function sendOtpEmail(toEmail, otpCode, customTemplateId = null) {
   const targetTemplate = customTemplateId || EMAILJS_OTP_TEMPLATE_ID || EMAILJS_TEMPLATE_ID;
 
   const templateParams = {
-    to_email: toEmail,
-    otp_code: otpCode,
-    code:     otpCode,
-    time:     new Date().toLocaleString(),
+    to_email:  toEmail,
+    otp_code:  otpCode,
+    code:      otpCode,
+    user_name: toEmail ? toEmail.split('@')[0] : 'Rider',
+    time:      new Date().toLocaleString(),
   };
 
   const response = await emailjs.send(
