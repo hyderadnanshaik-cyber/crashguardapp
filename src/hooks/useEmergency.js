@@ -109,7 +109,11 @@ export function useEmergency(userId, user, emergencyContacts = []) {
       await dispatchEmergencyEmails(
         contactsForEmail,
         u,
-        { severity: sev?.level || 'SEVERE', gps: impact?.gps ?? null }
+        {
+          severity:      sev?.level || 'SEVERE',
+          gps:           impact?.gps ?? null,
+          triggerMethod: impact?.rawPacket?.triggerMethod || impact?.triggerMethod || 'AUTO_SENSOR',
+        }
       );
     } catch (err) {
       console.warn('[Emergency] Email dispatch error:', err?.text || err?.message || err);

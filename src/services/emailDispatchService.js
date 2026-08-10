@@ -38,18 +38,38 @@ function ensureInit() {
 async function sendEmergencyEmailToContact(contact, rider, incident) {
   if (!contact.email) return;
 
-  const mapsUrl = incident.gps?.lat
-    ? `https://maps.google.com/?q=${incident.gps.lat},${incident.gps.lon}`
-    : 'Location unavailable';
+  const lat = incident.gps?.lat;
+  const lon = incident.gps?.lon;
+
+  const mapsUrl = (lat && lon)
+    ? `https://maps.google.com/?q=${lat},${lon}`
+    : null;
+
+  const gpsText = (lat && lon)
+    ? `${lat.toFixed(5)}, ${lon.toFixed(5)}`
+    : 'Not available (GPS not locked)';
+
+  const liveUrl = mapsUrl || 'Location not available';
 
   const templateParams = {
-    to_email:    contact.email,
-    to_name:     contact.name || 'Emergency Contact',
-    rider_name:  rider?.displayName || 'Rider',
-    blood_group: rider?.bloodGroup  || 'Not specified',
-    severity:    incident.severity  || 'SEVERE',
-    time:        new Date().toLocaleString(),
-    maps_url:    mapsUrl,
+    // Recipient
+    to_email:        contact.email,
+    to_name:         contact.name || 'Emergency Contact',
+
+    // Rider info
+    rider_name:      rider?.displayName || 'Rider',
+    rider_code:      rider?.riderCode || rider?.uid?.slice(0, 8) || 'N/A',
+    blood_group:     rider?.bloodGroup || 'Not specified',
+
+    // Crash details
+    severity:        incident.severity || 'SEVERE',
+    timestamp:       new Date().toLocaleString(),
+    time:            new Date().toLocaleString(),
+    trigger_source:  incident.triggerMethod || 'AUTO_SENSOR',
+    gps_coordinates: gpsText,
+    maps_url:        liveUrl,
+    live_url:        liveUrl,
+    location:        gpsText,
   };
 
   const response = await emailjs.send(
