@@ -98,67 +98,47 @@ export function useHardwareClaim(uid) {
       return { ok: false, error: 'Invalid Rider Access Code. Please check your official Crash Guard hardware card.' };
     }
 
-    // 2. Firestore duplicate-claim check (best-effort)
-    try {
-      const [colId, docId] = RIDER_CODES_DOC.split('/');
-      const ref  = doc(db, colId, docId);
-      const snap = await getDoc(ref);
-
-      if (snap.exists()) {
-        const { codes = [] } = snap.data();
-        const found = codes.find(c => c.code === code);
-        if (found?.usedBy && found.usedBy !== uid) {
-          return { ok: false, error: 'This Hardware License is already claimed by another user.' };
-        }
-
-        // Mark as claimed in system_config
-        const updated = codes.map(c =>
-          c.code === code
-            ? { ...c, usedBy: uid, usedAt: new Date().toISOString() }
-            : c
-        );
-        await setDoc(ref, { codes: updated }, { merge: true }).catch(() => {});
-      } else {
-        // Seed the doc first time
-        const seeded = RIDER_CODES_ARRAY.map(c =>
-          c.code === code ? { ...c, usedBy: uid, usedAt: new Date().toISOString() } : c
-        );
-        await setDoc(ref, { codes: seeded }).catch(() => {});
-      }
-    } catch (err) {
-      console.warn('[useHardwareClaim] Firestore duplicate-check skipped (non-critical):', err.message);
-    }
-
-    // 3. Write claim to user profile doc
     const claimedAtISO = new Date().toISOString();
-    const claimData = {
-      isHardwareClaimed: true,
-      hardwareId:        entry.hardwareId,
-      riderCode:         code,
-      licenseLabel:      entry.label,
-      hardwareClaimedAt: claimedAtISO,
-    };
-
-    try {
-      await setDoc(doc(db, 'users', uid), claimData, { merge: true });
-    } catch (err) {
-      console.warn('[useHardwareClaim] Firestore user write failed:', err.message);
-      // Still allow local claim if Firestore fails
-    }
-
-    // 4. Persist to localStorage and update local state immediately
     const localClaim = {
       riderCode:  code,
       hardwareId: entry.hardwareId,
       label:      entry.label,
       claimedAt:  claimedAtISO,
     };
-    saveHardwareClaim(uid, localClaim);
+
+    // 2. Persist to localStorage & update local state IMMEDIATELY (zero waiting for network)
+    if (uid) {
+      saveHardwareClaim(uid, localClaim);
+    }
     setIsClaimed(true);
     setHardwareId(entry.hardwareId);
     setRiderCode(code);
     setLicenseLabel(entry.label);
     setClaimedAt(claimedAtISO);
+
+    // 3. Fire-and-forget background Firestore sync (non-blocking, max 2s timeout)
+    if (uid && db) {
+      (async () => {
+        try {
+          const userRef = doc(db, 'users', uid);
+          const claimData = {
+            isHardwareClaimed: true,
+            hardwareId:        entry.hardwareId,
+            riderCode:         code,
+            licenseLabel:      entry.label,
+            hardwareClaimedAt: claimedAtISO,
+          };
+          // 2s timeout race
+          const writePromise = setDoc(userRef, claimData, { merge: true });
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Firestore timeout')), 2000)
+          );
+          await Promise.race([writePromise, timeoutPromise]);
+        } catch (err) {
+          console.warn('[useHardwareClaim] Background Firestore sync notice:', err.message);
+        }
+      })();
+    }
 
     return { ok: true };
   }, [uid]);

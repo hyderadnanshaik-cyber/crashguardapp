@@ -40,38 +40,34 @@ function RiderCodeModal({ onConfirm, onBack, user }) {
       return;
     }
 
-    // ── Step 2: Optionally sync usedBy to Firestore (best-effort, never blocks access) ──
-    try {
-      const [colId, docId] = RIDER_CODES_DOC.split('/');
-      const ref = doc(db, colId, docId);
-      const snap = await getDoc(ref);
+    // ── Step 2: Sync usedBy to Firestore in background (non-blocking, 1s max) ──
+    (async () => {
+      try {
+        const [colId, docId] = RIDER_CODES_DOC.split('/');
+        const ref = doc(db, colId, docId);
+        const getPromise = getDoc(ref);
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Firestore timeout')), 1000)
+        );
+        const snap = await Promise.race([getPromise, timeoutPromise]);
 
-      if (!snap.exists()) {
-        // Seed the codes doc — if this fails, we still allow access
-        await setDoc(ref, { codes: INITIAL_RIDER_CODES }).catch(() => {});
-      } else {
-        const { codes = INITIAL_RIDER_CODES } = snap.data() || {};
-        const entry = codes.find(c => c.code === trimmed);
+        if (!snap.exists()) {
+          await setDoc(ref, { codes: INITIAL_RIDER_CODES }).catch(() => {});
+        } else {
+          const { codes = INITIAL_RIDER_CODES } = snap.data() || {};
+          const entry = codes.find(c => c.code === trimmed);
 
-        // If the code is claimed by ANOTHER user, block access
-        if (entry?.usedBy && entry.usedBy !== user?.uid) {
-          setError('This code is already registered to another rider account.');
-          setLoading(false);
-          return;
+          if (entry && !entry.usedBy) {
+            const updated = codes.map(c =>
+              c.code === trimmed ? { ...c, usedBy: user?.uid, usedAt: new Date().toISOString() } : c
+            );
+            await updateDoc(ref, { codes: updated }).catch(() => {});
+          }
         }
-
-        // Mark as claimed — non-blocking
-        if (entry && !entry.usedBy) {
-          const updated = codes.map(c =>
-            c.code === trimmed ? { ...c, usedBy: user?.uid, usedAt: new Date().toISOString() } : c
-          );
-          await updateDoc(ref, { codes: updated }).catch(() => {});
-        }
+      } catch (err) {
+        console.warn('[RiderCode] Background Firestore sync notice:', err.message);
       }
-    } catch (err) {
-      // Firestore error is non-fatal — code was already validated locally above
-      console.warn('[RiderCode] Firestore sync skipped (non-critical):', err.message);
-    }
+    })();
 
     // ── Step 3: Admit the rider ──
     onConfirm(trimmed);
