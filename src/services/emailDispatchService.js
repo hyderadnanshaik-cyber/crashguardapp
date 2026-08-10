@@ -79,9 +79,9 @@ export async function dispatchEmergencyEmails(contacts, rider, incident) {
 
   ensureInit();
 
-  const contactsWithEmail = (contacts || []).filter(c => c.email);
+  const contactsWithEmail = (contacts || []).filter(c => c?.email && typeof c.email === 'string' && c.email.trim().includes('@'));
   if (contactsWithEmail.length === 0) {
-    console.warn('[EmailJS] No emergency contacts have email addresses saved.');
+    console.warn('[EmailJS] No emergency contacts have a valid email address saved.');
     return;
   }
 

@@ -93,18 +93,19 @@ const EmergencySOSPanel = ({
             {/* Test Email & OTP Button */}
             <button
               onClick={async () => {
-                const targetEmail = contacts.find(c => c.email)?.email || user?.email;
-                if (!targetEmail) {
-                  alert('Please add an Emergency Contact with an email address in Profile & Contacts tab first!');
-                  return;
+                let targetEmail = contacts.find(c => c?.email && c.email.includes('@'))?.email || user?.email || '';
+                if (!targetEmail || !targetEmail.includes('@')) {
+                  const input = window.prompt('Enter an email address to receive the test OTP & Emergency Alert:', user?.email || '');
+                  if (!input || !input.includes('@')) return;
+                  targetEmail = input.trim();
                 }
                 const code = Math.floor(100000 + Math.random() * 900000).toString();
                 try {
                   await sendOtpEmail(targetEmail, code);
-                  alert(`✅ Test OTP (${code}) sent successfully to ${targetEmail}! Check your inbox.`);
+                  alert(`✅ Test OTP (${code}) sent successfully to ${targetEmail}! Check your inbox (and spam folder).`);
                 } catch (err) {
                   const errorMsg = err?.text || err?.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-                  alert(`Email dispatch notice: ${errorMsg}`);
+                  alert(`Email dispatch notice: ${errorMsg}\n\nTip: Make sure the "To Email" field in your EmailJS Template Settings is set to {{to_email}}`);
                 }
               }}
               className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-2.5 rounded-lg transition-all flex items-center justify-center gap-2"
