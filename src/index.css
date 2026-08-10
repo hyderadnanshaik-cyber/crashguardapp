@@ -1,0 +1,270 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/**
+ * @file index.css
+ * @description Global styles — Crash Guard GoDaddy Light Theme & RHAX Animated Mascot
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base Resets ──────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+
+  body {
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Light scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+  ::selection { background: rgba(238,0,0,0.15); color: #0f172a; }
+}
+
+/* ─── Component Layer ───────────────────────────────────────────────────────── */
+@layer components {
+
+  /* ── Light Cards & Panels ──────────────────────────────── */
+  .glass {
+    @apply bg-white border border-slate-200 shadow-sm;
+  }
+  .glass-dark {
+    @apply bg-slate-900 text-white border border-slate-800 shadow-md;
+  }
+  .glass-card {
+    @apply bg-white border border-slate-200 shadow-sm rounded-2xl;
+  }
+  .glass-card-hover {
+    @apply glass-card hover:border-slate-300 hover:shadow-md transition-all duration-300;
+  }
+
+  /* ── Premium Light Buttons ──────────────────────────────── */
+  .btn-glow-red {
+    @apply bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-xl
+           shadow-sm hover:shadow transition-all duration-300;
+  }
+  .btn-glass {
+    @apply bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold px-6 py-3 rounded-xl
+           shadow-sm transition-all duration-300;
+  }
+  .btn-pill-glow {
+    @apply rounded-full px-5 py-2.5 font-semibold text-sm transition-all duration-200;
+  }
+
+  /* ── Auth Light Inputs ──────────────────────────────────── */
+  .input-field {
+    @apply w-full bg-white border border-slate-300 text-slate-900 placeholder-slate-400
+           rounded-lg px-4 py-3 text-sm outline-none
+           focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10
+           transition-all duration-150;
+  }
+
+  /* ── Severity ──────────────────────────────────────────── */
+  .severity-minor    { @apply text-amber-700 bg-amber-50 border border-amber-200; }
+  .severity-moderate { @apply text-orange-700 bg-orange-50 border border-orange-200; }
+  .severity-severe   { @apply text-red-700 bg-red-50 border border-red-200; }
+
+  /* ── Status dots ──────────────────────────────────────── */
+  .status-dot-green  { @apply w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]; }
+  .status-dot-red    { @apply w-2 h-2 rounded-full bg-red-600 shadow-[0_0_6px_rgba(220,38,38,0.5)]; }
+  .status-dot-amber  { @apply w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.5)]; }
+}
+
+/* ─── Keyframes ─────────────────────────────────────────────────────────────── */
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1) translateY(0px); }
+  50%       { transform: scale(1.03) translateY(-4px); }
+}
+
+@keyframes bubblePop {
+  0%   { transform: scale(0.7) translateY(10px); opacity: 0; }
+  70%  { transform: scale(1.05) translateY(-2px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes waveHand {
+  0%, 100% { transform: rotate(0deg); transform-origin: 70% 70%; }
+  10%      { transform: rotate(14deg); }
+  20%      { transform: rotate(-8deg); }
+  30%      { transform: rotate(14deg); }
+  40%      { transform: rotate(-4deg); }
+  50%      { transform: rotate(10deg); }
+  60%      { transform: rotate(0deg); }
+}
+
+/* RHAX emoji hand wave bounce */
+@keyframes waveHandEmoji {
+  0%  { transform: rotate(0deg) scale(1); }
+  15% { transform: rotate(25deg) scale(1.2); }
+  30% { transform: rotate(-15deg) scale(1.1); }
+  45% { transform: rotate(20deg) scale(1.2); }
+  60% { transform: rotate(-10deg) scale(1.1); }
+  75% { transform: rotate(15deg) scale(1.15); }
+  100%{ transform: rotate(0deg) scale(1); }
+}
+
+/* RHAX mascot gentle side-to-side sway in guiding mode (simulating dismount stance) */
+@keyframes mascotSway {
+  0%, 100% { transform: rotate(-1deg) translateY(0px); }
+  25%      { transform: rotate(2deg) translateY(-3px); }
+  50%      { transform: rotate(-1.5deg) translateY(-1px); }
+  75%      { transform: rotate(1.5deg) translateY(-2px); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes connectionRing {
+  0%   { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes emergencyFlash {
+  0%, 100% { border-color: rgba(220,38,38,0.3); }
+  50%       { border-color: rgba(220,38,38,1); box-shadow: 0 0 30px rgba(220,38,38,0.4); }
+}
+
+/* Horizontal Speed Lines Streaming Animation */
+@keyframes speedLineMove {
+  0% {
+    transform: translateX(120%) scaleX(0.4);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(-160%) scaleX(2.2);
+    opacity: 0;
+  }
+}
+
+/* ─── Animation Classes ────────────────────────────────────────────────────── */
+.animate-breathe     { animation: breathe 4s ease-in-out infinite; }
+.animate-float       { animation: float 6s ease-in-out infinite; }
+.animate-fade-in     { animation: fadeIn 0.35s ease-out forwards; }
+.animate-bubble-pop  { animation: bubblePop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.animate-wave        { animation: waveHand 2.5s ease-in-out infinite; }
+.animate-conn-ring   { animation: connectionRing 1.5s ease-out infinite; }
+.emergency-flash     { animation: emergencyFlash 0.8s ease-in-out infinite; }
+
+.animate-speed-line-1 { animation: speedLineMove 0.6s linear infinite; }
+.animate-speed-line-2 { animation: speedLineMove 0.85s linear infinite 0.15s; }
+.animate-speed-line-3 { animation: speedLineMove 0.55s linear infinite 0.3s; }
+.animate-speed-line-4 { animation: speedLineMove 0.75s linear infinite 0.45s; }
+
+/* RHAX guiding mode: mascot sway + wave emoji */
+.animate-mascot-wave  { animation: mascotSway 3s ease-in-out infinite; }
+.animate-wave-hand    { animation: waveHandEmoji 1.8s ease-in-out infinite; transform-origin: center bottom; }
+
+/* Mascot cutout glow shadow */
+.mascot-glow-cutout {
+  filter: drop-shadow(0 10px 18px rgba(220,38,38,0.35)) drop-shadow(0 0 12px rgba(255,255,255,0.7));
+}
+
+/* ── Floating card CSS triangle arrows ──────────────────────────────────── */
+/* These override Tailwind's border utilities for triangle arrows */
+.card-arrow-up {
+  position: absolute;
+  width: 0; height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 12px solid white;
+  top: -12px;
+  left: 20px;
+  filter: drop-shadow(0 -2px 2px rgba(0,0,0,0.06));
+}
+.card-arrow-down {
+  position: absolute;
+  width: 0; height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 12px solid white;
+  bottom: -12px;
+  left: 20px;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.06));
+}
+.card-arrow-left {
+  position: absolute;
+  width: 0; height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 12px solid white;
+  left: -12px;
+  top: 20px;
+  filter: drop-shadow(-2px 0 2px rgba(0,0,0,0.06));
+}
+.card-arrow-right {
+  position: absolute;
+  width: 0; height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 12px solid white;
+  right: -12px;
+  top: 20px;
+  filter: drop-shadow(2px 0 2px rgba(0,0,0,0.06));
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   CINEMATIC SPLASH — Deep Navy (#0B132B) Keyframes
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 1. Fast Panel Split (Left / Right from Center) */
+@keyframes splashPanelLeftFast {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+@keyframes splashPanelRightFast {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+/* 2. Logo Entry: Smooth Vertical Tilt/Pitch Rotation (X-axis) */
+@keyframes splashLogoVerticalPitch {
+  0%   { transform: perspective(800px) rotateX(-360deg) scale(0.6); opacity: 0; }
+  40%  { opacity: 1; }
+  85%  { transform: perspective(800px) rotateX(15deg) scale(1.05); opacity: 1; }
+  100% { transform: perspective(800px) rotateX(0deg) scale(1.0); opacity: 1; }
+}
+
+/* 3. Tagline letters: High-speed Y-axis poker-chip multi-spin */
+@keyframes splashPokerSpinFast {
+  0%   { transform: perspective(600px) rotateY(-720deg) scale(0.4); opacity: 0; }
+  50%  { opacity: 1; }
+  85%  { transform: perspective(600px) rotateY(15deg) scale(1.05); opacity: 1; }
+  100% { transform: perspective(600px) rotateY(0deg) scale(1.0); opacity: 1; }
+}
+
+/* 4. Quote letters: Staggered downward roll with bounce stop */
+@keyframes splashQuoteRollDown {
+  0%   { transform: translateY(-24px); opacity: 0; }
+  65%  { transform: translateY(4px);   opacity: 1; }
+  85%  { transform: translateY(-2px);  opacity: 1; }
+  100% { transform: translateY(0px);   opacity: 1; }
+}
+
+/* 5. Final curtain / container fade out */
+@keyframes splashFadeOut {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+

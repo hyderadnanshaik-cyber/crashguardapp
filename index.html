@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth overflow-x-hidden">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/helmet-icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+    <!-- SEO Meta Tags -->
+    <title>Crash Guard by RedHack — Smart Rider Protection & Emergency SOS</title>
+    <meta name="description" content="Real-time motorcycle crash detection, severity classification, and automatic emergency dispatch. Built by RedHack for every rider on the road." />
+    <meta name="keywords" content="motorcycle safety, crash detection, emergency dispatch, GPS tracking, helmet sensor, rider protection, RedHack" />
+    <meta name="author" content="RedHack" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Crash Guard by RedHack — Smart Rider Protection" />
+    <meta property="og:description" content="Detect crashes in real-time. Stream live GPS. Protect riders with automated emergency dispatch." />
+    <meta property="og:image" content="/helmet.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Crash Guard by RedHack" />
+    <meta name="twitter:description" content="Motorcycle crash detection and emergency dispatch system by RedHack." />
+
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#dc2626" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CrashGuard" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <!-- Google Fonts: Inter + Outfit + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+  </head>
+  <body class="antialiased bg-slate-50 text-slate-900 overflow-x-hidden selection:bg-red-500/30">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

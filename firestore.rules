@@ -1,0 +1,102 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ================================================================
+    // Helper Functions
+    // ================================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidCrashLog() {
+      return request.resource.data.keys().hasAll(['peakForce', 'severity', 'alertStatus', 'timestamp'])
+        && request.resource.data.peakForce is number
+        && request.resource.data.severity in ['MINOR', 'MODERATE', 'SEVERE']
+        && request.resource.data.alertStatus in [
+             'PENDING', 'FALSE_ALARM', 'ALERT_DISPATCHED',
+             'ACKNOWLEDGED', 'QUEUED_OFFLINE', 'ALERT_DISPATCHED_OFFLINE'
+           ];
+    }
+
+    // ================================================================
+    // User Profiles & Subcollections
+    // ================================================================
+    match /users/{userId} {
+      allow read: if true; // Public relative live tracking & access code lookup
+      allow write: if isOwner(userId) || isAuthenticated(); // Allow authenticated users to patch (e.g. watcher writes accessCode)
+
+      match /live_location/{docId} {
+        allow write, delete: if isOwner(userId);
+        allow read: if true;
+      }
+
+      match /crash_logs/{logId} {
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['alertStatus'])
+          && request.resource.data.alertStatus in [
+               'FALSE_ALARM', 'ALERT_DISPATCHED', 'ACKNOWLEDGED'
+             ];
+        allow delete: if false; // Logs are PERMANENT — never deleted
+        allow read: if isOwner(userId);
+      }
+
+      match /emergency_contacts/{contactId} {
+        allow read, write, delete: if isOwner(userId);
+      }
+
+      match /settings/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Paired relatives subcollection — watchers write here to register themselves
+      match /paired_relatives/{deviceId} {
+        allow read: if isOwner(userId) || isAuthenticated();
+        allow write: if isAuthenticated(); // Any authenticated watcher can register
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // ================================================================
+    // Rider Locations — Live Telemetry Stream for Watcher Portal
+    // ================================================================
+    match /rider_locations/{accessCode} {
+      allow read: if true; // Watcher portal reads this
+      allow write: if isAuthenticated(); // Rider & watcher both write here
+
+      match /impacts/{impactId} {
+        allow read: if true;
+        allow write: if isAuthenticated();
+        allow delete: if false; // Impact records are permanent
+      }
+    }
+
+    // ================================================================
+    // System Config — Rider Access Codes
+    // ================================================================
+    match /system_config/{docId} {
+      allow read: if true;
+      allow write: if isAuthenticated(); // Authenticated riders can seed & claim codes
+    }
+
+    // ================================================================
+    // Top-Level Incidents Collection (Backend Dispatch & Relative Portal)
+    // ================================================================
+    match /incidents/{incidentId} {
+      allow read: if true; // Paired relative portal & live track screen
+      allow write: if isAuthenticated(); // Rider device triggers/cancels
+    }
+
+    // Default Fallback
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
