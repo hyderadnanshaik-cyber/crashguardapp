@@ -49,7 +49,13 @@ export default function DashboardPage({ user, onSignOut, onSwitchRole }) {
   const [activePanel, setActivePanel] = useState('hardware');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [emergencyContacts, setEmergencyContacts] = useState([]);
+  const [emergencyContacts, setEmergencyContacts] = useState(() => {
+    if (!user?.uid) return [];
+    try {
+      const raw = localStorage.getItem(`cg_emergency_contacts_${user.uid}`);
+      return raw ? JSON.parse(raw) : [];
+    } catch (_) { return []; }
+  });
 
   useEffect(() => {
     if (!user?.uid || !db) return;
@@ -57,6 +63,7 @@ export default function DashboardPage({ user, onSignOut, onSwitchRole }) {
       const data = [];
       snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
       setEmergencyContacts(data);
+      try { localStorage.setItem(`cg_emergency_contacts_${user.uid}`, JSON.stringify(data)); } catch (_) {}
     });
     return () => unsub();
   }, [user?.uid]);

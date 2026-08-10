@@ -3,6 +3,7 @@ import { Shield, AlertOctagon, CheckCircle, Siren, Users, MapPin, Phone, AlertTr
 import { GlassCard } from '../ui/GlassCard';
 import { CountdownOverlay } from '../ui/CountdownOverlay';
 import ManualCrashModal from './ManualCrashModal';
+import { sendOtpEmail } from '../../services/emailDispatchService';
 
 const EmergencySOSPanel = ({ 
   userId, 
@@ -87,6 +88,27 @@ const EmergencySOSPanel = ({
             >
               <ShieldAlert size={16} />
               <span>MANUAL CRASH TRIGGER 🚨</span>
+            </button>
+
+            {/* Test Email & OTP Button */}
+            <button
+              onClick={async () => {
+                const targetEmail = contacts.find(c => c.email)?.email || user?.email;
+                if (!targetEmail) {
+                  alert('Please add an Emergency Contact with an email address in Profile & Contacts tab first!');
+                  return;
+                }
+                const code = Math.floor(100000 + Math.random() * 900000).toString();
+                try {
+                  await sendOtpEmail(targetEmail, code);
+                  alert(`✅ Test OTP (${code}) sent successfully to ${targetEmail}! Check your inbox.`);
+                } catch (err) {
+                  alert('Email dispatch notice: ' + (err?.message || err));
+                }
+              }}
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-2.5 rounded-lg transition-all flex items-center justify-center gap-2"
+            >
+              <span>📧 Test Emergency Email & Send OTP Code</span>
             </button>
           </div>
         </GlassCard>

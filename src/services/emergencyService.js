@@ -116,7 +116,21 @@ export function buildSMSBody({ name, severity, gps, bloodGroup }) {
  */
 export function dispatchSMSAlert(phoneNumber, encodedBody) {
   const smsUri = `sms:${phoneNumber}?body=${encodedBody}`;
-  window.location.href = smsUri;
+  // Use a hidden anchor element to trigger sms: protocol without navigating window.location
+  // This prevents the browser from aborting pending async EmailJS fetch requests
+  try {
+    const a = document.createElement('a');
+    a.href = smsUri;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      try { document.body.removeChild(a); } catch (_) {}
+    }, 500);
+  } catch (err) {
+    console.warn('[Emergency] Anchor click failed, falling back to location.href:', err);
+    window.location.href = smsUri;
+  }
 }
 
 /**

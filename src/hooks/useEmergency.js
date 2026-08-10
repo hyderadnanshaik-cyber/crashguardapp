@@ -91,7 +91,19 @@ export function useEmergency(userId, user, emergencyContacts = []) {
       bloodGroup: u?.bloodGroup ?? null,
     });
 
-    // 1. Send SMS to ALL emergency contacts sequentially with 1s gap
+    // 1. Send emergency EMAIL to all contacts that have an email address (await first)
+    try {
+      console.info('[Emergency] Dispatching emergency emails to contacts...');
+      await dispatchEmergencyEmails(
+        contacts,
+        u,
+        { severity: sev?.level || 'SEVERE', gps: impact?.gps ?? null }
+      );
+    } catch (err) {
+      console.warn('[Emergency] Email dispatch error:', err);
+    }
+
+    // 2. Send SMS to ALL emergency contacts sequentially
     if (contacts.length > 0) {
       contacts.forEach((contact, idx) => {
         setTimeout(() => {
@@ -99,18 +111,11 @@ export function useEmergency(userId, user, emergencyContacts = []) {
             dispatchSMSAlert(contact.phone, body);
             console.info(`[Emergency] SMS dispatched to contact ${idx + 1}: ${contact.name}`);
           }
-        }, idx * 1200); // 1.2s gap between each SMS to avoid OS throttle
+        }, idx * 1200);
       });
     } else {
       console.warn('[Emergency] No emergency contacts configured — SMS not sent.');
     }
-
-    // 2. Send emergency EMAIL to all contacts that have an email address
-    dispatchEmergencyEmails(
-      contacts,
-      u,
-      { severity: sev?.level || 'SEVERE', gps: impact?.gps ?? null }
-    ).catch(err => console.warn('[Emergency] Email dispatch error:', err));
   }
 
   /**
