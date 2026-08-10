@@ -67,14 +67,24 @@ export function useHardwareClaim(uid) {
             setLicenseLabel(claim.label);
             setClaimedAt(claim.claimedAt);
             saveHardwareClaim(uid, claim);
-          } else if (!data.isHardwareClaimed) {
-            // Explicitly unclaimed in Firestore (e.g. admin reset)
+          } else if (data.isHardwareClaimed === false) {
+            // Explicitly unclaimed in Firestore (e.g. user released hardware)
             setIsClaimed(false);
             setHardwareId(null);
             setRiderCode(null);
             setLicenseLabel(null);
             setClaimedAt(null);
             clearHardwareClaim(uid);
+          } else {
+            // If isHardwareClaimed is undefined in Firestore, preserve cached claim if present
+            const local = loadHardwareClaim(uid);
+            if (local?.hardwareId) {
+              setIsClaimed(true);
+              setHardwareId(local.hardwareId);
+              setRiderCode(local.riderCode);
+              setLicenseLabel(local.label);
+              setClaimedAt(local.claimedAt);
+            }
           }
         }
         setIsLoading(false);
