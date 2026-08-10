@@ -21,6 +21,7 @@ import {
 import { sendCancellationSignal, sendImSafe, sendManualCrashToESP32 } from '../services/bleService';
 import { enqueueIncident } from '../services/offlineQueue';
 import { publishRiderImpact, publishCrashImmediately, publishSafeImmediately } from '../services/riderPublisherService';
+import { dispatchEmergencyEmails } from '../services/emailDispatchService';
 
 /** Emergency state machine values */
 export const EMERGENCY_STATE = {
@@ -90,7 +91,7 @@ export function useEmergency(userId, user, emergencyContacts = []) {
       bloodGroup: u?.bloodGroup ?? null,
     });
 
-    // Send SMS to ALL emergency contacts sequentially with 1s gap
+    // 1. Send SMS to ALL emergency contacts sequentially with 1s gap
     if (contacts.length > 0) {
       contacts.forEach((contact, idx) => {
         setTimeout(() => {
@@ -103,6 +104,13 @@ export function useEmergency(userId, user, emergencyContacts = []) {
     } else {
       console.warn('[Emergency] No emergency contacts configured — SMS not sent.');
     }
+
+    // 2. Send emergency EMAIL to all contacts that have an email address
+    dispatchEmergencyEmails(
+      contacts,
+      u,
+      { severity: sev?.level || 'SEVERE', gps: impact?.gps ?? null }
+    ).catch(err => console.warn('[Emergency] Email dispatch error:', err));
   }
 
   /**
