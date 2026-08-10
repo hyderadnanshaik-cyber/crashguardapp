@@ -16,7 +16,7 @@ import emailjs from '@emailjs/browser';
 // Replace these with your real EmailJS credentials
 const EMAILJS_SERVICE_ID      = import.meta.env.VITE_EMAILJS_SERVICE_ID      || 'service_lzj0gl7';
 const EMAILJS_TEMPLATE_ID     = import.meta.env.VITE_EMAILJS_TEMPLATE_ID     || 'template_gs6oce7';
-const EMAILJS_OTP_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID || 'template_gs6oce7'; // Use OTP template if specified
+const EMAILJS_OTP_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID || 'template_ojfwshi';
 const EMAILJS_PUBLIC_KEY      = import.meta.env.VITE_EMAILJS_PUBLIC_KEY      || 'EleYy0xV_iNVk_mc5';
 
 let _initialized = false;
