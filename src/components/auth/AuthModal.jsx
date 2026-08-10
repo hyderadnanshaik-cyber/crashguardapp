@@ -9,7 +9,7 @@ import { HelmetLogo } from '../ui/HelmetLogo';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = 'signin', isForced = false }) {
-  const [tab,           setTab]           = useState(defaultTab); // 'signin' | 'register'
+  const [tab,           setTab]           = useState(defaultTab); // 'signin' | 'register' | 'forgot'
   const [email,         setEmail]         = useState('');
   const [password,      setPassword]      = useState('');
   const [fullName,      setFullName]      = useState('');
@@ -18,11 +18,12 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = 'si
   const [error,         setError]         = useState('');
   const [errorType,     setErrorType]     = useState(''); // 'not-found' | 'general' | 'timeout'
   const [loading,       setLoading]       = useState(false);
+  const [resetSent,     setResetSent]     = useState(false);
   const [slowConn,      setSlowConn]      = useState(false); // shown after 8s
   const slowTimerRef = useRef(null);
   const abortRef     = useRef(false);     // lets us cancel an in-flight form submit
 
-  const { signIn, register, signInWithGoogle } = useAuth();
+  const { signIn, register, resetPassword, signInWithGoogle } = useAuth();
 
   // Sync tab if defaultTab changes
   useEffect(() => { setTab(defaultTab); }, [defaultTab]);
@@ -40,7 +41,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = 'si
 
   if (!isOpen) return null;
 
-  const clearError = () => { setError(''); setErrorType(''); };
+  const clearError = () => { setError(''); setErrorType(''); setResetSent(false); };
 
   const switchToRegister = () => {
     setTab('register');
@@ -55,14 +56,25 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = 'si
     startSlowTimer();
 
     try {
-      if (tab === 'register') {
+      if (tab === 'forgot') {
+        if (!email) {
+          setError('Please enter your account email address.');
+          return;
+        }
+        await resetPassword(email);
+        setResetSent(true);
+      } else if (tab === 'register') {
         await register(email, password, fullName);
+        if (!abortRef.current) {
+          onSuccess?.();
+          onClose();
+        }
       } else {
         await signIn(email, password);
-      }
-      if (!abortRef.current) {
-        onSuccess?.();
-        onClose();
+        if (!abortRef.current) {
+          onSuccess?.();
+          onClose();
+        }
       }
     } catch (err) {
       if (abortRef.current) return; // user cancelled — swallow error
@@ -221,6 +233,23 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = 'si
             </div>
           )}
 
+          {/* Reset Sent Banner */}
+          {resetSent && (
+            <div className="mb-5 p-4 bg-emerald-50 border border-emerald-300 rounded-xl animate-fade-in">
+              <p className="text-sm font-bold text-emerald-800">Password Reset Email Sent!</p>
+              <p className="text-xs text-emerald-700 mt-1">
+                We've sent a password reset link to <strong>{email}</strong>. Check your inbox (and spam folder) to reset your password.
+              </p>
+              <button
+                type="button"
+                onClick={() => { setTab('signin'); clearError(); }}
+                className="mt-3 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-md transition-colors"
+              >
+                Back to Sign In
+              </button>
+            </div>
+          )}
+
           {/* Tab Switcher */}
           <div className="flex rounded-lg border border-slate-200 mb-6 overflow-hidden">
             <button
@@ -236,6 +265,13 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = 'si
               className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${tab === 'register' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
             >
               Register
+            </button>
+            <button
+              type="button"
+              onClick={() => { setTab('forgot'); clearError(); }}
+              className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${tab === 'forgot' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+            >
+              Recover
             </button>
           </div>
 
@@ -255,7 +291,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = 'si
 
             <div>
               <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                {tab === 'signin' ? 'Username / Email / Customer #' : 'Email Address'}
+                {tab === 'signin' ? 'Email Address' : tab === 'forgot' ? 'Account Email Address' : 'Email Address'}
               </label>
               <input
                 type="email" required value={email}
@@ -265,22 +301,24 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = 'si
               />
             </div>
 
-            <div>
-              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="input-field pr-11"
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+            {tab !== 'forgot' && (
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="input-field pr-11"
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {tab === 'signin' && (
               <div className="flex items-center justify-between text-xs">
@@ -290,7 +328,13 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = 'si
                     className="w-4 h-4 rounded accent-black border-slate-300" />
                   Keep me signed in
                 </label>
-                <span className="text-slate-400 text-[11px]">Forgot password?</span>
+                <button
+                  type="button"
+                  onClick={() => { setTab('forgot'); clearError(); }}
+                  className="text-red-600 hover:underline font-medium text-[11px]"
+                >
+                  Forgot password?
+                </button>
               </div>
             )}
 
@@ -319,7 +363,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, defaultTab = 'si
                 type="submit"
                 className="w-full bg-black hover:bg-slate-800 text-white font-semibold py-3 rounded-lg shadow-sm transition-colors text-sm tracking-wide mt-2"
               >
-                {tab === 'signin' ? 'Sign In to Crash Guard' : 'Create My Safety Account'}
+                {tab === 'signin' ? 'Sign In to Crash Guard' : tab === 'forgot' ? 'Send Password Reset Email' : 'Create My Safety Account'}
               </button>
             )}
           </form>

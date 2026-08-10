@@ -21,6 +21,8 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged,
   updateProfile,
+  sendPasswordResetEmail,
+  deleteUser,
   OAuthProvider,
   FacebookAuthProvider,
 } from 'firebase/auth';
@@ -303,6 +305,41 @@ export function useAuth() {
     }
   };
 
+  const resetPassword = async (email) => {
+    try {
+      await withTimeout(
+        sendPasswordResetEmail(auth, email),
+        10000,
+        'Password reset email'
+      );
+      return true;
+    } catch (err) {
+      const { message } = friendlyError(err);
+      const error = new Error(message);
+      error.code = err.code;
+      throw error;
+    }
+  };
+
+  const deleteAccount = async () => {
+    if (!auth.currentUser) throw new Error('No user logged in to delete.');
+    try {
+      const uid = auth.currentUser.uid;
+      // Delete user document from Firestore if connected
+      if (db) {
+        const ref = doc(db, 'users', uid);
+        await setDoc(ref, { isDeleted: true, deletedAt: serverTimestamp() }, { merge: true }).catch(console.warn);
+      }
+      await withTimeout(deleteUser(auth.currentUser), 10000, 'Account deletion');
+      setIsNewUser(false);
+      try { localStorage.removeItem('cg_user_authenticated'); } catch (_) {}
+      return true;
+    } catch (err) {
+      const { message } = friendlyError(err);
+      throw new Error(message || 'Account deletion failed. You may need to sign out and sign back in before deleting your account.');
+    }
+  };
+
   const signOut = () => {
     setIsNewUser(false);
     return firebaseSignOut(auth);
@@ -314,6 +351,8 @@ export function useAuth() {
     isNewUser,
     signIn,
     register,
+    resetPassword,
+    deleteAccount,
     signInWithGoogle,
     signInWithFacebook,
     signInWithApple,

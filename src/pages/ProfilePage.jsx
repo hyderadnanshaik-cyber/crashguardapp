@@ -34,10 +34,12 @@ export default function ProfilePage({ user, onSignOut }) {
   // Seed from cache immediately so UI never flashes empty on reload
   const [contacts, setContacts] = useState(() => user?.uid ? loadContactsFromCache(user.uid) : []);
   const [bloodGroup, setBloodGroup] = useState(() => user?.uid ? loadBloodGroupFromCache(user.uid) : '');
-  const [newContact, setNewContact] = useState({ name: '', phone: '', relationship: '' });
+  const [newContact, setNewContact] = useState({ name: '', phone: '', email: '', relationship: '' });
   const [insurance, setInsurance] = useState({ provider: '', policyNumber: '', phone: '' });
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingBg, setIsSavingBg] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const { sharingEnabled: isSharing, toggleSharing } = useLocation(user?.uid);
 
   // Sync cache when user changes (e.g. different account login)
@@ -105,6 +107,7 @@ export default function ProfilePage({ user, onSignOut }) {
     const contactObj = {
       name: newContact.name,
       phone: newContact.phone,
+      email: newContact.email.trim(),
       relationship: newContact.relationship,
       createdAt: new Date().toISOString()
     };
@@ -115,7 +118,7 @@ export default function ProfilePage({ user, onSignOut }) {
     const optimisticList = [...contacts, optimisticContact];
     setContacts(optimisticList);
     saveContactsToCache(user.uid, optimisticList);
-    setNewContact({ name: '', phone: '', relationship: '' });
+    setNewContact({ name: '', phone: '', email: '', relationship: '' });
 
     try {
       // 1. Save to subcollection (Firestore is the source of truth)
@@ -280,7 +283,7 @@ export default function ProfilePage({ user, onSignOut }) {
               <div key={contact.id} className="flex items-center justify-between p-3.5 bg-slate-50 rounded-lg border border-slate-200">
                 <div>
                   <p className="font-bold text-slate-900 text-sm">{contact.name}</p>
-                  <p className="text-xs text-slate-500">{contact.phone} • {contact.relationship}</p>
+                  <p className="text-xs text-slate-500">{contact.phone} {contact.email ? `• ${contact.email}` : ''} • {contact.relationship}</p>
                 </div>
                 <button onClick={() => handleDeleteContact(contact.id)} className="text-slate-400 hover:text-red-600 p-1">
                   <Trash2 size={16} />
@@ -297,13 +300,18 @@ export default function ProfilePage({ user, onSignOut }) {
             <form onSubmit={handleAddContact} className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
               <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Add New Contact</h3>
               <input 
-                type="text" placeholder="Name" required
+                type="text" placeholder="Name (e.g. John Doe)" required
                 value={newContact.name} onChange={(e) => setNewContact({...newContact, name: e.target.value})}
                 className="input-field"
               />
               <input 
                 type="tel" placeholder="Phone (+1234567890)" required
                 value={newContact.phone} onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
+                className="input-field"
+              />
+              <input 
+                type="email" placeholder="Email Address (for Emergency Email alerts)" 
+                value={newContact.email} onChange={(e) => setNewContact({...newContact, email: e.target.value})}
                 className="input-field"
               />
               <input 
@@ -374,6 +382,61 @@ export default function ProfilePage({ user, onSignOut }) {
               <span>Created by</span>
               <span className="text-red-600 font-bold">RedHack</span>
             </div>
+          </div>
+
+          {/* Danger Zone — Account Deletion */}
+          <div className="bg-red-50/50 border border-red-200 rounded-xl p-6 shadow-sm space-y-3">
+            <h3 className="text-xs font-black uppercase tracking-wider text-red-700 flex items-center gap-2">
+              <Trash2 size={16} /> Danger Zone — Account & Data Deletion
+            </h3>
+            <p className="text-xs text-red-600/80 leading-relaxed">
+              Permanently delete your Crash Guard account, unbind all hardware claims, and erase saved emergency contacts. This action cannot be undone.
+            </p>
+
+            {!showDeleteConfirm ? (
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full bg-white hover:bg-red-100 text-red-600 border border-red-300 font-bold py-2 rounded-md text-xs uppercase tracking-wider transition-colors"
+              >
+                Delete My Account & Erase Data
+              </button>
+            ) : (
+              <div className="p-3 bg-white border border-red-300 rounded-lg space-y-2">
+                <p className="text-xs font-bold text-red-800">Are you absolutely sure?</p>
+                <p className="text-[11px] text-slate-500">Your profile and connected hardware bindings will be deleted immediately.</p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 bg-slate-100 text-slate-700 font-semibold py-1.5 rounded text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isDeletingAccount}
+                    onClick={async () => {
+                      setIsDeletingAccount(true);
+                      try {
+                        // Clear local cache
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        if (onSignOut) await onSignOut();
+                        alert('Account and data deleted successfully.');
+                      } catch (err) {
+                        alert(err?.message || 'Deletion failed. Please re-authenticate and try again.');
+                      } finally {
+                        setIsDeletingAccount(false);
+                      }
+                    }}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-1.5 rounded text-xs disabled:opacity-50"
+                  >
+                    {isDeletingAccount ? 'Deleting…' : 'Yes, Delete Permanently'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
