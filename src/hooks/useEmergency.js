@@ -93,14 +93,26 @@ export function useEmergency(userId, user, emergencyContacts = []) {
 
     // 1. Send emergency EMAIL to all contacts that have an email address (await first)
     try {
-      console.info('[Emergency] Dispatching emergency emails to contacts...');
+      // Build a merged contacts list: real contacts + rider's own email as fallback
+      const contactsForEmail = [...(contacts || [])];
+
+      // Add rider's own Firebase account email if not already in contacts
+      const riderEmail = u?.email;
+      const alreadyIncluded = contactsForEmail.some(
+        c => c?.email && c.email.trim().toLowerCase() === (riderEmail || '').toLowerCase()
+      );
+      if (riderEmail && riderEmail.includes('@') && !alreadyIncluded) {
+        contactsForEmail.push({ name: u?.displayName || 'Rider (Self)', email: riderEmail });
+      }
+
+      console.info('[Emergency] Dispatching emergency emails. Contacts:', JSON.stringify(contactsForEmail.map(c => ({ name: c?.name, email: c?.email }))));
       await dispatchEmergencyEmails(
-        contacts,
+        contactsForEmail,
         u,
         { severity: sev?.level || 'SEVERE', gps: impact?.gps ?? null }
       );
     } catch (err) {
-      console.warn('[Emergency] Email dispatch error:', err);
+      console.warn('[Emergency] Email dispatch error:', err?.text || err?.message || err);
     }
 
     // 2. Send SMS to ALL emergency contacts sequentially

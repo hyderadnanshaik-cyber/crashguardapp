@@ -73,6 +73,17 @@ const EmergencySOSPanel = ({
             </div>
           </div>
 
+          {/* No email warning */}
+          {contacts.filter(c => c?.email && c.email.includes('@')).length === 0 && (
+            <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 mb-4 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+              <p className="text-xs text-amber-700">
+                <strong>No contact email saved.</strong> Crash alerts will be sent to your own account email ({user?.email || 'your email'}). 
+                Add an email to your emergency contacts in <strong>Profile & Contacts</strong> to alert them too.
+              </p>
+            </div>
+          )}
+
           {/* Manual Crash SOS Action Card */}
           <div className="bg-red-50 border border-red-200 rounded-xl p-5 space-y-3">
             <div className="flex items-center gap-2 text-red-900">
