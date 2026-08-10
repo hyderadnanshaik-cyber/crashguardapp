@@ -14,9 +14,10 @@ import emailjs from '@emailjs/browser';
 
 // ── YOUR EMAILJS CONFIG ─────────────────────────────────────────────────────
 // Replace these with your real EmailJS credentials
-const EMAILJS_SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID  || 'service_lzj0gl7';
-const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_gs6oce7';
-const EMAILJS_PUBLIC_KEY  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY  || 'EleYy0xV_iNVk_mc5';
+const EMAILJS_SERVICE_ID      = import.meta.env.VITE_EMAILJS_SERVICE_ID      || 'service_lzj0gl7';
+const EMAILJS_TEMPLATE_ID     = import.meta.env.VITE_EMAILJS_TEMPLATE_ID     || 'template_gs6oce7';
+const EMAILJS_OTP_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID || 'template_gs6oce7'; // Use OTP template if specified
+const EMAILJS_PUBLIC_KEY      = import.meta.env.VITE_EMAILJS_PUBLIC_KEY      || 'EleYy0xV_iNVk_mc5';
 
 let _initialized = false;
 
@@ -104,4 +105,41 @@ export async function dispatchEmergencyEmails(contacts, rider, incident) {
       }
     });
   }
+}
+
+/**
+ * Generate a random 6-digit OTP string (e.g. "849201")
+ */
+export function generate6DigitOtp() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+/**
+ * Send a 6-digit OTP code to a user's email via EmailJS (100% Free Tier).
+ *
+ * @param {string} toEmail
+ * @param {string} otpCode
+ * @param {string} [customTemplateId] - Optional specific OTP template ID
+ */
+export async function sendOtpEmail(toEmail, otpCode, customTemplateId = null) {
+  if (!toEmail) throw new Error('Email address required.');
+  ensureInit();
+
+  const targetTemplate = customTemplateId || EMAILJS_OTP_TEMPLATE_ID || EMAILJS_TEMPLATE_ID;
+
+  const templateParams = {
+    to_email: toEmail,
+    otp_code: otpCode,
+    code:     otpCode,
+    time:     new Date().toLocaleString(),
+  };
+
+  const response = await emailjs.send(
+    EMAILJS_SERVICE_ID,
+    targetTemplate,
+    templateParams
+  );
+
+  console.info(`[EmailJS OTP] Code ${otpCode} sent to ${toEmail} — Status: ${response.status}`);
+  return response;
 }
