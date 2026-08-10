@@ -103,7 +103,8 @@ const EmergencySOSPanel = ({
                   await sendOtpEmail(targetEmail, code);
                   alert(`✅ Test OTP (${code}) sent successfully to ${targetEmail}! Check your inbox.`);
                 } catch (err) {
-                  alert('Email dispatch notice: ' + (err?.message || err));
+                  const errorMsg = err?.text || err?.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
+                  alert(`Email dispatch notice: ${errorMsg}`);
                 }
               }}
               className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-2.5 rounded-lg transition-all flex items-center justify-center gap-2"

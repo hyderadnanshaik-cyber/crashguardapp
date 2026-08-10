@@ -55,7 +55,8 @@ async function sendEmergencyEmailToContact(contact, rider, incident) {
   const response = await emailjs.send(
     EMAILJS_SERVICE_ID,
     EMAILJS_TEMPLATE_ID,
-    templateParams
+    templateParams,
+    EMAILJS_PUBLIC_KEY
   );
 
   console.info(`[EmailJS] Email sent to ${contact.email} — Status: ${response.status}`);
@@ -138,7 +139,8 @@ export async function sendOtpEmail(toEmail, otpCode, customTemplateId = null) {
   const response = await emailjs.send(
     EMAILJS_SERVICE_ID,
     targetTemplate,
-    templateParams
+    templateParams,
+    EMAILJS_PUBLIC_KEY
   );
 
   console.info(`[EmailJS OTP] Code ${otpCode} sent to ${toEmail} — Status: ${response.status}`);
