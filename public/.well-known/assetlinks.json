@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.redhack.crashguard",
+    "sha256_cert_fingerprints": ["C5:15:EE:38:CB:13:A2:55:14:9A:07:41:12:87:EF:BB:D4:7D:75:45:AA:40:F4:4B:C0:B8:76:64:9E:06:C7:93"]
+  }
+}]
